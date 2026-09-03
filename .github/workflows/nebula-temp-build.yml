@@ -1,0 +1,64 @@
+name: Temporary NÉBULA APK Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-nebula:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout isolated NÉBULA branch
+        uses: actions/checkout@v4
+        with:
+          ref: nebula-android-production
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Restore and verify NÉBULA source
+        run: |
+          cat bootstrap_parts/p_* > bootstrap_nebula.py
+          echo '32b9543f51ff312f6dc5d26b0169b19ce4ee6c578527c75cd7d85cd10cecf937  bootstrap_nebula.py' | sha256sum -c -
+          python bootstrap_nebula.py
+          python -m py_compile bootstrap_nebula.py make_media.py
+          bash -n make_audio.sh
+      - name: Generate bundled cinematics and ambience
+        run: |
+          python -m pip install --quiet pillow
+          ffmpeg -version | head -1
+          python make_media.py
+          bash make_audio.sh
+          for f in pearl train laugh orbit archive; do
+            test -f "app/src/main/assets/media/cinematic_${f}.mp4"
+            test -f "app/src/main/assets/media/ambient_${f}.m4a"
+          done
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK 35
+        run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Android Lint and APK build
+        run: gradle :app:lintDebug :app:assembleDebug --stacktrace
+      - name: Verify APK integrity and offline payload
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          test -f "$APK"
+          unzip -t "$APK" >/dev/null
+          unzip -l "$APK" | grep -q 'assets/index.html'
+          for f in pearl train laugh orbit archive; do
+            unzip -l "$APK" | grep -q "assets/media/cinematic_${f}.mp4"
+            unzip -l "$APK" | grep -q "assets/media/ambient_${f}.m4a"
+          done
+          sha256sum "$APK" | tee APK_SHA256.txt
+      - name: Upload verified APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEBULA-Android-APK
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            APK_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30
