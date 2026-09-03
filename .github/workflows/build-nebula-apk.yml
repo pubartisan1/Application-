@@ -3,6 +3,8 @@ name: Build NÉBULA APK
 on:
   push:
     branches: [ nebula-android-production ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
