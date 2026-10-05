@@ -16,3 +16,6 @@ Première base fonctionnelle de Néo 3 : interface mobile/PWA, humanoïde animé
 - voix locale ;
 - avatar/lip-sync avancé ;
 - emballage Android APK/AAB.
+
+## Personnalité et évolution
+Néo possède désormais une personnalité déclarative versionnée dans `neo-personality.json`. Ses moteurs sont interchangeables via `engines.js` : une technologie plus récente peut remplacer voix, STT, cerveau local, recherche ou avatar sans modifier ses principes. `freshness.js` centralise les durées de vie des informations et les niveaux de confiance.
