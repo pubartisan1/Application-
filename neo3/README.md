@@ -22,3 +22,5 @@ Néo possède désormais une personnalité déclarative versionnée dans `neo-pe
 
 
 Android build pipeline activated: 2026-10-05.
+
+APK rebuild after SDK workflow fix.
