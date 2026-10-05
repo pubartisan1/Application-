@@ -24,6 +24,11 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets
           cp neo3/* android/app/src/main/assets/ || true
+      - name: Preserve Android signing certificate
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: neo3-android-signing-v1
       - name: Build debug APK
         working-directory: android
         run: gradle assembleDebug
